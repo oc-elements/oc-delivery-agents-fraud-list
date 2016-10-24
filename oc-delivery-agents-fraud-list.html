@@ -7,11 +7,12 @@
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../oc-paginator/mercury-paginator.html">
 
+
 <!--
 `oc-delivery-agents-fraud-list`
 Element to display a list of all delivery agents fraud on the Ordercloud platform
 
-@demo demo/index.html 
+@demo demo/index.html
 -->
 
 <dom-module id="oc-delivery-agents-fraud-list">
@@ -63,7 +64,6 @@ Element to display a list of all delivery agents fraud on the Ordercloud platfor
 
       properties: {
         organisationId: Number,
-        agentId: Number,
         loading: {
           type: Boolean,
           notify: true
@@ -76,21 +76,21 @@ Element to display a list of all delivery agents fraud on the Ordercloud platfor
       },
 
       observers : [
-        'refresh(organisationId, agentId)'
+        'refresh(organisationId)'
       ],
 
       refresh : function(){
 
-        if(!this.agentId || !this.organisationId) return;
+        if(!this.organisationId) return;
 
         this._getFraudList(this.organisationId);
 
       },
 
-      _getFraudList : function(agentId, page, pageSize) {
+      _getFraudList : function(orgId, page, pageSize) {
         this.loading = true;
 
-        this.$.fraudApi.getOrgFraudList(agentId, page, pageSize)
+        this.$.fraudApi.getOrgFraudList(orgId, page, pageSize)
                 .then(function(request){
 
                   this._fraudData = request.response.results;
@@ -106,7 +106,8 @@ Element to display a list of all delivery agents fraud on the Ordercloud platfor
       },
 
       _viewFraud : function(e) {
-        console.log(e.model.item)
+        var agentId = e.model.item.deliveryAgent.id;
+        this.fire('oc-page-to', '/fraud/'+agentId);
       }
 
     });
