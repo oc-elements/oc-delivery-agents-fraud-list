@@ -1,5 +1,12 @@
 <link rel="import" href="../polymer/polymer.html">
 
+<link rel="import" href="../oc-organisations-fraud-api/oc-organisations-fraud-api.html">
+<link rel="import" href="../iron-data-table/iron-data-table.html">
+<link rel="import" href="../oc-grid-controls/oc-grid-controls.html">
+<link rel="import" href="../oc-iron-data-table-styles/oc-iron-data-table-styles.html">
+<link rel="import" href="../paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../oc-paginator/mercury-paginator.html">
+
 <!--
 `oc-delivery-agents-fraud-list`
 Element to display a list of all delivery agents fraud on the Ordercloud platform
@@ -14,20 +21,93 @@ Element to display a list of all delivery agents fraud on the Ordercloud platfor
         display: block;
       }
     </style>
-    <h2>Hello [[prop1]]</h2>
+
+    <oc-organisations-fraud-api id="fraudApi"></oc-organisations-fraud-api>
+
+    <oc-grid-controls data="[[ _fraudData ]]" total-count="[[ _totalItems ]]" num-entries="[[ _pageSize ]]">
+      <iron-data-table
+              id="dataTable"
+              current-page="[[ _currentPage ]]"
+              loading="{{ loading }}">
+        <data-table-column name="Subject" >
+          <template>[[item.emailSubject]]</template>
+        </data-table-column>
+        <data-table-column name="Reason" >
+          <template>[[item.organisation.anomalyMessage]]</template>
+        </data-table-column>
+        <data-table-column name="Status" >
+          <template>[[item.status]]</template>
+        </data-table-column>
+        <data-table-column name="Level" >
+          <template>[[item.fraudLevel]]</template>
+        </data-table-column>
+        <data-table-column name="User" >
+          <template>[[item.user.profile.email]]</template>
+        </data-table-column>
+        <data-table-column name="View" >
+          <template><paper-icon-button icon="visibility" on-tap="_viewFraud"></paper-icon-button></template>
+        </data-table-column>
+
+
+
+      </iron-data-table>
+    </oc-grid-controls>
+
   </template>
 
   <script>
     Polymer({
 
       is: 'oc-delivery-agents-fraud-list',
+      behaviors: [OC.Behaviours.ApiConsumer],
 
       properties: {
-        prop1: {
-          type: String,
-          value: 'oc-delivery-agents-fraud-list',
+        organisationId: Number,
+        agentId: Number,
+        loading: {
+          type: Boolean,
+          notify: true
         },
+
+        _fraudData : Array,
+        _totalItems: Number,
+        _pageSize: Number,
+        _currentPage: Number,
       },
+
+      observers : [
+        'refresh(organisationId, agentId)'
+      ],
+
+      refresh : function(){
+
+        if(!this.agentId || !this.organisationId) return;
+
+        this._getFraudList(this.organisationId);
+
+      },
+
+      _getFraudList : function(agentId, page, pageSize) {
+        this.loading = true;
+
+        this.$.fraudApi.getAgentsFraudList(agentId, page, pageSize)
+                .then(function(request){
+
+                  this._fraudData = request.response.results;
+                  this._totalItems = request.response.count;
+                  this._pageSize = pageSize || 10;
+                  this._currentPage = 1;
+
+                  console.log(request.response);
+
+                }.bind(this))
+                .catch(this.fire.bind(this, 'delivery-agents-error', 'Failed to load delivery agent fraud list'))
+                .finally(this.set.bind(this, 'loading', false));
+      },
+
+      _viewFraud : function(e) {
+        console.log(e.model.item)
+      }
 
     });
   </script>
