@@ -90,7 +90,7 @@ Element to display a list of all delivery agents fraud on the Ordercloud platfor
       _getFraudList : function(agentId, page, pageSize) {
         this.loading = true;
 
-        this.$.fraudApi.getAgentsFraudList(agentId, page, pageSize)
+        this.$.fraudApi.getOrgFraudList(agentId, page, pageSize)
                 .then(function(request){
 
                   this._fraudData = request.response.results;
